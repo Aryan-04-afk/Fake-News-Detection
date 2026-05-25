@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Analysis - Fake News Detector</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Main wrapper -->
+    <div class="main-wrapper">
+        <nav class="navbar">
+            <div class="navbar-left">
+                <a href="index.html" class="brand">Fake News Detector</a>
+                <div class="nav-pages">
+                    <a href="index.html">Text</a>
+                    <a href="image.html" class="active">Image</a>
+                    <a href="history.html">History</a>
+                </div>
+            </div>
+            <div class="nav-links">
+                <span id="welcomeUser"></span>
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+        </nav>
+
+        <main class="home-main">
+            <div class="hero">
+                <p class="hero-small">AI Image Detection</p>
+                <h1>Check if an Image is AI Generated</h1>
+                <p class="hero-desc">Upload any image and our system will analyze whether it was created by AI or is a real photograph.</p>
+            </div>
+
+            <hr>
+
+            <div class="check-section">
+                <div class="check-card">
+                    <h2>Upload an Image</h2>
+                    <p class="check-subtitle">Select or drag and drop an image to analyze</p>
+
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <p class="upload-icon">&#128247;</p>
+                        <p>Click to select an image or drag and drop</p>
+                        <p class="upload-hint">JPEG, PNG, GIF, WebP (max 5MB)</p>
+                        <input type="file" id="imageInput" accept="image/jpeg,image/png,image/gif,image/webp" hidden>
+                    </div>
+
+                    <div class="image-preview-box" id="imagePreview" style="display:none;">
+                        <img id="previewImg" src="" alt="Preview">
+                        <button class="btn-remove" id="removeImage">Remove</button>
+                    </div>
+
+                    <button class="btn" id="checkImageBtn">Check Image</button>
+                    <div class="result-box" id="imageResultBox"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <p>Fake News Detector &copy; 2026 &middot; Built for truth in journalism</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

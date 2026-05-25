@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - Fake News Detector</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>History</span>
+            <button class="sidebar-close" id="sidebarClose">&times;</button>
+        </div>
+        <div class="sidebar-list" id="historyList"></div>
+        <div class="sidebar-empty" id="historyEmpty">No analyses yet</div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main wrapper -->
+    <div class="main-wrapper">
+        <nav class="navbar">
+            <div class="navbar-left">
+                <button class="hamburger-btn" id="sidebarOpen">&#9776;</button>
+                <a href="index.html" class="brand">Fake News Detector</a>
+                <div class="nav-pages">
+                    <a href="index.html">Text</a>
+                    <a href="image.html">Image</a>
+                    <a href="history.html" class="active">History</a>
+                </div>
+            </div>
+            <div class="nav-links">
+                <span id="welcomeUser"></span>
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+        </nav>
+
+        <main class="home-main">
+            <div class="hero">
+                <p class="hero-small">Your Analysis Log</p>
+                <h1>Analysis History</h1>
+                <p class="hero-desc">Browse all articles and images you have previously submitted for verification.</p>
+            </div>
+
+            <hr>
+
+            <div class="history-section">
+                <div class="history-search-row" id="historySearchRow" style="display:none;">
+                    <input type="text" id="historySearch" class="history-search-input" placeholder="Search history...">
+                </div>
+                <div class="history-toolbar" id="historyToolbar" style="display:none;">
+                    <div class="history-filter-tabs" id="historyFilterTabs">
+                        <button class="filter-tab active" data-filter="all">All</button>
+                        <button class="filter-tab" data-filter="text">Text</button>
+                        <button class="filter-tab" data-filter="image">Image</button>
+                    </div>
+                    <button class="btn-clear" id="clearHistoryBtn">Clear All</button>
+                </div>
+                <div id="historyCards" class="history-cards"></div>
+                <div id="historyPageEmpty" class="history-empty-state" style="display:none;">
+                    <p>No analyses yet.</p>
+                    <p>Head to <a href="index.html">Text Analysis</a> or <a href="image.html">Image Analysis</a> to get started.</p>
+                </div>
+                <div id="historyNoFilter" class="history-empty-state" style="display:none;">
+                    <p></p>
+                </div>
+                <div id="historyLoading" class="history-loading">Loading history&hellip;</div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <p>Fake News Detector &copy; 2026 &middot; Built for truth in journalism</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        (function () {
+            var user = JSON.parse(localStorage.getItem('loggedInUser'));
+            if (!user) { window.location.href = 'login.html'; return; }
+
+            var API_URL = 'http://localhost:3000/api';
+            var allAnalyses = [];
+            var activeFilter = 'all';
+
+            fetch(API_URL + '/history?email=' + encodeURIComponent(user.email))
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var loading = document.getElementById('historyLoading');
+                    var empty = document.getElementById('historyPageEmpty');
+
+                    if (loading) loading.style.display = 'none';
+
+                    if (!data.success || data.analyses.length === 0) {
+                        if (empty) empty.style.display = 'block';
+                        return;
+                    }
+
+                    allAnalyses = data.analyses;
+                    document.getElementById('historyToolbar').style.display = 'flex';
+                    document.getElementById('historySearchRow').style.display = 'block';
+                    renderCards('all');
+                })
+                .catch(function () {
+                    var loading = document.getElementById('historyLoading');
+                    if (loading) loading.style.display = 'none';
+                    var empty = document.getElementById('historyPageEmpty');
+                    if (empty) {
+                        empty.innerHTML = '<p>Failed to load history.</p><p>Make sure the backend is running.</p>';
+                        empty.style.display = 'block';
+                    }
+                });
+
+            function renderCards(filter) {
+                activeFilter = filter;
+                var cards = document.getElementById('historyCards');
+                var noFilter = document.getElementById('historyNoFilter');
+                var query = (document.getElementById('historySearch').value || '').trim().toLowerCase();
+
+                var filtered = allAnalyses.filter(function (a) {
+                    var typeMatch = filter === 'all' ||
+                        (filter === 'image' ? a.type === 'image' : a.type !== 'image');
+                    if (!typeMatch) return false;
+                    if (!query) return true;
+                    var haystack = (a.text || '') + ' ' + (a.verdict || '') + ' ' + (a.imageName || '') + ' ' + (a.category || '');
+                    return haystack.toLowerCase().indexOf(query) !== -1;
+                });
+
+                if (filtered.length === 0) {
+                    cards.innerHTML = '';
+                    noFilter.style.display = 'block';
+                    noFilter.querySelector('p').textContent = query
+                        ? 'No results for "' + query + '".'
+                        : 'No entries for this filter.';
+                    return;
+                }
+
+                noFilter.style.display = 'none';
+                cards.innerHTML = filtered.map(function (a) {
+                    return a.type === 'image' ? buildImageCard(a) : buildTextCard(a);
+                }).join('');
+            }
+
+            function buildTextCard(a) {
+                var verdictClass = '';
+                var borderColor = '#ddd';
+                if (a.verdict === 'Appears Credible') {
+                    verdictClass = 'verdict-credible'; borderColor = '#27ae60';
+                } else if (a.verdict === 'Possibly Misleading') {
+                    verdictClass = 'verdict-warning'; borderColor = '#f39c12';
+                } else {
+                    verdictClass = 'verdict-fake'; borderColor = '#c0392b';
+                }
+
+                var category = a.category || 'general';
+                var dateStr = new Date(a.createdAt).toLocaleDateString(undefined, {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                });
+                var truePercent = Math.round(100 - (a.confidence || 0));
+
+                return '<div class="history-card" style="border-left-color:' + borderColor + ';">' +
+                    '<div class="history-card-top">' +
+                        '<span class="history-card-verdict ' + verdictClass + '">' + escapeHtml(a.verdict) + '</span>' +
+                        '<div class="history-card-meta">' +
+                            '<span class="history-type-badge">Text</span>' +
+                            '<span class="category-badge category-' + category + '">' +
+                                category.charAt(0).toUpperCase() + category.slice(1) +
+                            '</span>' +
+                            '<span class="history-card-date">' + dateStr + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<p class="history-card-text">' + escapeHtml(a.text) + '</p>' +
+                    '<div class="confidence-bar-container">' +
+                        '<div class="confidence-bar-label">' +
+                            '<span>Credibility</span>' +
+                            '<span>' + truePercent + '% true</span>' +
+                        '</div>' +
+                        '<div class="confidence-bar-track">' +
+                            '<div class="confidence-bar-fill" style="width:' + truePercent + '%;background-color:' + borderColor + ';"></div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }
+
+            function buildImageCard(a) {
+                var verdictClass = '';
+                var borderColor = '#27ae60';
+                if (a.verdict === 'AI Generated') {
+                    verdictClass = 'verdict-fake'; borderColor = '#c0392b';
+                } else if (a.verdict === 'Suspicious') {
+                    verdictClass = 'verdict-warning'; borderColor = '#f39c12';
+                } else {
+                    verdictClass = 'verdict-credible';
+                }
+
+                var dateStr = new Date(a.createdAt).toLocaleDateString(undefined, {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                });
+                var realScore = 100 - (a.score || 0);
+                var imgHtml = a.imageData
+                    ? '<img class="history-card-image" src="' + a.imageData + '" alt="' + escapeHtml(a.imageName || 'Uploaded image') + '">'
+                    : '<div class="history-card-image-placeholder">Image not available</div>';
+
+                return '<div class="history-card" style="border-left-color:' + borderColor + ';">' +
+                    '<div class="history-card-top">' +
+                        '<span class="history-card-verdict ' + verdictClass + '">' + escapeHtml(a.verdict) + '</span>' +
+                        '<div class="history-card-meta">' +
+                            '<span class="history-type-badge history-type-image">Image</span>' +
+                            '<span class="history-card-date">' + dateStr + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    imgHtml +
+                    '<div class="confidence-bar-container" style="margin-top:10px;">' +
+                        '<div class="confidence-bar-label">' +
+                            '<span>Authenticity</span>' +
+                            '<span>' + realScore + '% real</span>' +
+                        '</div>' +
+                        '<div class="confidence-bar-track">' +
+                            '<div class="confidence-bar-fill" style="width:' + realScore + '%;background-color:' + borderColor + ';"></div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }
+
+            // Search input
+            document.getElementById('historySearch').addEventListener('input', function () {
+                renderCards(activeFilter);
+            });
+
+            // Filter tab clicks
+            document.getElementById('historyFilterTabs').addEventListener('click', function (e) {
+                var btn = e.target.closest('.filter-tab');
+                if (!btn) return;
+                document.querySelectorAll('.filter-tab').forEach(function (t) { t.classList.remove('active'); });
+                btn.classList.add('active');
+                renderCards(btn.dataset.filter);
+            });
+
+            document.getElementById('clearHistoryBtn').addEventListener('click', function () {
+                if (!confirm('Delete all history? This cannot be undone.')) return;
+
+                fetch(API_URL + '/history?email=' + encodeURIComponent(user.email), { method: 'DELETE' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.success) {
+                            allAnalyses = [];
+                            document.getElementById('historyCards').innerHTML = '';
+                            document.getElementById('historyToolbar').style.display = 'none';
+                            document.getElementById('historySearchRow').style.display = 'none';
+                            document.getElementById('historyPageEmpty').style.display = 'block';
+                            document.getElementById('historyNoFilter').style.display = 'none';
+                        }
+                    })
+                    .catch(function () { alert('Failed to clear history.'); });
+            });
+
+            function escapeHtml(str) {
+                var d = document.createElement('div');
+                d.textContent = str;
+                return d.innerHTML;
+            }
+        })();
+    </script>
+</body>
+</html>

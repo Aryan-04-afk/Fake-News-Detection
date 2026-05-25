@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Detector</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Main wrapper -->
+    <div class="main-wrapper">
+        <nav class="navbar">
+            <div class="navbar-left">
+                <a href="index.html" class="brand">Fake News Detector</a>
+                <div class="nav-pages">
+                    <a href="index.html" class="active">Text</a>
+                    <a href="image.html">Image</a>
+                    <a href="history.html">History</a>
+                </div>
+            </div>
+            <div class="nav-links">
+                <span id="welcomeUser"></span>
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+        </nav>
+
+        <main class="home-main">
+            <div class="hero">
+                <p class="hero-small">Machine Learning Powered</p>
+                <h1>Verify the News Before You Share It</h1>
+                <p class="hero-desc">Our system analyzes articles and headlines to help you distinguish credible reporting from misinformation.</p>
+            </div>
+
+            <hr>
+
+            <div class="steps-section">
+                <h2 class="section-title">How It Works</h2>
+                <div class="steps-row">
+                    <div class="step">
+                        <strong>1. Paste Article</strong>
+                        <p>Copy any news headline or article text you want to verify</p>
+                    </div>
+                    <div class="step">
+                        <strong>2. Analyze</strong>
+                        <p>Our ML model processes the language patterns and credibility signals</p>
+                    </div>
+                    <div class="step">
+                        <strong>3. Get Verdict</strong>
+                        <p>Receive a clear assessment of the article's authenticity</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="check-section">
+                <div class="check-card">
+                    <h2>Check an Article</h2>
+                    <p class="check-subtitle">Paste the full text or headline below</p>
+                    <textarea id="newsInput" placeholder="e.g. &quot;Scientists discover new species in the Amazon rainforest...&quot;"></textarea>
+                    <button class="btn" id="analyzeBtn">Analyze Article</button>
+                    <div class="result-box" id="resultBox"></div>
+                    <div class="highlighted-text-box" id="highlightedText"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <p>Fake News Detector &copy; 2026 &middot; Built for truth in journalism</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
