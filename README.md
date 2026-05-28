@@ -1,1 +1,1 @@
-Download the necessary Node modules yourself.
+Download the dependencies using npm install in the terminal.
